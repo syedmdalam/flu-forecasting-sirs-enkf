@@ -6,6 +6,9 @@ Probabilistic 1–4 week ahead forecasts of weekly influenza-like illness (ILI %
 - Each forecast is a full predictive distribution (23 quantiles) in the ATSF2026 forecast hub format
 - Scored with the **Weighted Interval Score (WIS)**, RMSE, MAE and 50% / 95% interval coverage
 
+![US national ILI % with SIRS + EnKF 4-week forecasts](results/SIRSEnKF/plots/fan_US_National.png)
+<sub>Observed U.S. national ILI % (black) with 4-week SIRS + EnKF forecasts (blue median and shaded prediction intervals) from selected origin dates (dashed lines).</sub>
+
 ## Models
 
 **SIRS + EnKF (mechanistic).** A stochastic SIRS compartmental model (recovery γ = 1/7 day⁻¹, waning immunity ω = 1/180 day⁻¹) simulated with daily tau-leaping. The transmission rate β is a latent state that follows a log-scale Ornstein–Uhlenbeck process with a winter-peaked seasonal mean. A 300-member **Ensemble Kalman Filter** jointly estimates the state and parameter vector `[S, I, R, β]` from weekly ILI observations, then the posterior ensemble is propagated 4 weeks ahead to produce empirical quantiles. Implemented from scratch: [`sirs_tau_leap.R`](R/sirs_tau_leap.R), [`forecast_step.R`](R/forecast_step.R), [`enkf_update.R`](R/enkf_update.R), [`run_forecast.R`](R/run_forecast.R).
@@ -22,24 +25,27 @@ Probabilistic 1–4 week ahead forecasts of weekly influenza-like illness (ILI %
 | 95% coverage (nominal 0.95) | 0.91 | **0.96** |
 | WIS under-prediction ↓ | 0.26 | **0.15** |
 
-| Horizon | WIS (EnKF) | WIS (SARIMA) |
-|---|---|---|
-| 1 week | **0.30** | 0.35 |
-| 2 weeks | 0.52 | **0.43** |
-| 3 weeks | 0.72 | **0.51** |
-| 4 weeks | 0.85 | **0.57** |
+### Accuracy by forecast horizon
 
-**Takeaways**
-- EnKF wins at 1 week, then SARIMA pulls ahead at longer horizons.
-- The two models produce intervals of almost the same width, and they over-predict about equally. Under-prediction accounts for nearly all of the gap. During free-running forecasts the SIRS model uses up its susceptible pool too quickly, so it bends downward while the epidemic is still rising and misses peaks.
-- HHS Region 6 is the hardest location for both models. Its flu season peaks earlier than the national average, which the shared seasonal prior for β does not capture.
-- Mechanistic structure doesn't automatically help. ILI % is a clinic visit rate, not a true prevalence, so the model's assumptions bias the forecasts. This matches findings in the influenza-forecasting literature (Reich et al., 2019, *PNAS*).
+EnKF is slightly better at 1 week ahead, but its error grows much faster, and SARIMA leads from 2 weeks onward.
+
+![Mean WIS by horizon for both models](results/comparison/wis_by_horizon.png)
+
+### Accuracy by location
+
+SARIMA scores better in 10 of 11 locations (Region 4 is essentially tied, and EnKF wins Region 3). HHS Region 6 (TX, LA, NM, OK, AR) is the hardest for both models. Its flu season peaks earlier than the national average, which the shared seasonal prior for β does not capture.
+
+![Mean WIS by location for both models](results/comparison/wis_by_location.png)
+
+### Why the mechanistic model loses: it under-predicts peaks
+
+WIS breaks down into three parts: interval width (sharpness), over-prediction and under-prediction. The two models produce intervals of almost the same width, and they over-predict about equally. Under-prediction (blue) accounts for nearly all of the gap. During 4-week free-running forecasts, the SIRS model uses up its susceptible pool too quickly, so its forecasts bend downward while the epidemic is still rising.
 
 | SIRS + EnKF | SARIMA |
 |---|---|
 | ![](results/SIRSEnKF/plots/wis_decomposition_by_horizon.png) | ![](results/SARIMA/plots/wis_decomposition_by_horizon.png) |
 
-![US national forecast fan chart (SIRS + EnKF)](results/SIRSEnKF/plots/fan_US_National.png)
+**Takeaway:** mechanistic structure doesn't automatically improve forecasts. ILI % is a clinic visit rate, not a true prevalence, so the model's assumptions bias the forecasts. This matches findings in the influenza-forecasting literature (Reich et al., 2019, *PNAS*).
 
 The full write-up is in [`report/INF599_Final_Project_Report.docx`](report/INF599_Final_Project_Report.docx).
 
@@ -53,6 +59,7 @@ R/                      forecasting + evaluation code
   run_forecast.R          driver: filter + 4-week forecast for all 134 origin dates
   run_sarima.R            SARIMA(0,1,1)(0,1,1)[52] baseline for the same 134 origin dates
   evaluate_forecasts.R    WIS (with decomposition), RMSE, MAE, coverage, plots
+  plot_comparison.R       head-to-head figures of both models (results/comparison/)
   smoke_test.R            2-date quick check of the pipeline
 model-metadata/         hub metadata for each model
 model-output/           134 forecast CSVs per model (hub format)
@@ -71,4 +78,5 @@ Rscript R/run_forecast.R                 # all 134 SIRS+EnKF forecasts -> model-
 Rscript R/run_sarima.R                   # all 134 SARIMA forecasts     -> model-output/syed-SARIMA/
 Rscript R/evaluate_forecasts.R SIRSEnKF  # -> results/SIRSEnKF/
 Rscript R/evaluate_forecasts.R SARIMA    # -> results/SARIMA/
+Rscript R/plot_comparison.R              # -> results/comparison/
 ```
