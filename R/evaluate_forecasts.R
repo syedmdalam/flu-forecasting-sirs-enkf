@@ -1,9 +1,11 @@
 # ---------------------------------------------------------------------------
-# Evaluate 134 SIHR+EnKF forecast files against ground truth.
+# Evaluate 134 forecast files for one model against ground truth
+# (WIS with decomposition, RMSE, MAE, 50%/95% coverage).
 #
-# Usage: setwd() to the folder containing this script (your `files/` folder),
-#        make sure the forecasts are at the output_dir path below,
-#        then source("evaluate_forecasts.R").
+# Usage (from the repository root):
+#   Rscript R/evaluate_forecasts.R SIRSEnKF
+#   Rscript R/evaluate_forecasts.R SARIMA
+# Reads model-output/syed-<MODEL>/, writes results/<MODEL>/{tables,plots}/.
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
@@ -16,10 +18,13 @@ suppressPackageStartupMessages({
 
 # ---- Config ----------------------------------------------------------------
 
-FORECAST_DIR <- "C:/Users/syed0/INF599/Final_project/forecasts_SARIMA"
+MODEL        <- commandArgs(trailingOnly = TRUE)[1]
+if (is.na(MODEL)) MODEL <- "SARIMA"
+FORECAST_DIR <- file.path("model-output", paste0("syed-", MODEL))
 TRUTH_URL    <- "https://raw.githubusercontent.com/sjfox/ATSF2026/refs/heads/main/target-data/time-series.csv"
-TABLES_DIR   <- "C:/Users/syed0/INF599/Final_project/eval_tables_SARIMA"
-PLOTS_DIR    <- "C:/Users/syed0/INF599/Final_project/eval_plots_SARIMA"
+TABLES_DIR   <- file.path("results", MODEL, "tables")
+PLOTS_DIR    <- file.path("results", MODEL, "plots")
+stopifnot(dir.exists(FORECAST_DIR))
 
 dir.create(TABLES_DIR, showWarnings = FALSE, recursive = TRUE)
 dir.create(PLOTS_DIR,  showWarnings = FALSE, recursive = TRUE)
@@ -191,7 +196,7 @@ p_decomp <- ggplot(wis_decomp_long,
                                over_prediction = "tomato",
                                under_prediction = "steelblue")) +
   theme_minimal()
-ggsave(file.path(PLOTS_DIR, "wis_decomposition_by_horizon_SARIMA.png"),
+ggsave(file.path(PLOTS_DIR, "wis_decomposition_by_horizon.png"),
        p_decomp, width = 7, height = 4, dpi = 120)
 
 # WIS by location (bar chart, sorted)
@@ -204,7 +209,7 @@ p_loc <- by_location |>
   coord_flip() +
   labs(title = "Mean WIS by location", x = NULL, y = "mean WIS") +
   theme_minimal()
-ggsave(file.path(PLOTS_DIR, "wis_by_location_SARIMA.png"),
+ggsave(file.path(PLOTS_DIR, "wis_by_location.png"),
        p_loc, width = 7, height = 4, dpi = 120)
 
 # RMSE vs WIS by location (do they tell the same story?)
@@ -212,10 +217,10 @@ p_rmse_wis <- by_location |>
   ggplot(aes(mean_WIS, RMSE, label = location)) +
   geom_point(color = "steelblue", size = 3) +
   geom_text(hjust = -0.1, size = 3) +
-  labs(title = "RMSE vs mean WIS across locations of SARIMA",
+  labs(title = paste("RMSE vs mean WIS across locations of", MODEL),
        x = "mean WIS", y = "RMSE") +
   theme_minimal()
-ggsave(file.path(PLOTS_DIR, "rmse_vs_wis_by_location_SARIMA.png"),
+ggsave(file.path(PLOTS_DIR, "rmse_vs_wis_by_location.png"),
        p_rmse_wis, width = 7, height = 5, dpi = 120)
 
 cat(sprintf("\nTables saved to: %s\n", TABLES_DIR))

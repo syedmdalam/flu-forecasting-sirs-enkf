@@ -1,23 +1,4 @@
 # ---------------------------------------------------------------------------
-# ATSF2026 SIHR + OU + EnKF forecasting driver
-# ---------------------------------------------------------------------------
-# Model setup:
-#   - 11 locations, each forecast INDEPENDENTLY (no spatial coupling)
-#   - Each location has its own effective population N_eff
-#   - SIHR compartmental dynamics via stochastic tau-leap
-#   - Transmission rate beta evolves via Ornstein-Uhlenbeck on log scale
-#   - EnKF joint state-parameter update on [S, I, H, R, beta]
-#   - Observation: ILI% mapped to I compartment via I_count = ili% * N_eff / 100
-#
-# Output:
-#   ONE CSV per origin_date (134 files total) written to OUTPUT_DIR.
-#   Each file contains 1012 rows = 11 locations x 4 horizons x 23 quantiles.
-#   Filename pattern: {origin_date}-SIHR-EnKF.csv
-#   Columns: origin_date, location, target, horizon, target_end_date,
-#            output_type, output_type_id, value
-# ---------------------------------------------------------------------------
-
-# ---------------------------------------------------------------------------
 # ATSF2026 SIRS + seasonal-beta + EnKF forecasting driver
 # ---------------------------------------------------------------------------
 # Model setup:
@@ -32,7 +13,9 @@
 # Output:
 #   ONE CSV per origin_date (134 files) in output_dir.
 #   Each file has 1012 rows = 11 locations x 4 horizons x 23 quantiles.
-#   Filename pattern: {origin_date}-SIRS-EnKF.csv
+#   Filename pattern: {origin_date}-syed-SIRSEnKF.csv
+#
+# Usage (from the repository root):  Rscript R/run_forecast.R
 # ---------------------------------------------------------------------------
 
 suppressPackageStartupMessages({
@@ -42,9 +25,9 @@ suppressPackageStartupMessages({
   library(lubridate)
 })
 
-source("C:/Users/syed0/INF599/Final_project/files/sirs_tau_leap.R")
-source("C:/Users/syed0/INF599/Final_project/files/forecast_step.R")
-source("C:/Users/syed0/INF599/Final_project/files/enkf_update.R")
+source("R/sirs_tau_leap.R")
+source("R/forecast_step.R")
+source("R/enkf_update.R")
 
 # ---------------- Configuration ----------------------------------------------
 
@@ -77,8 +60,8 @@ CONFIG <- list(
   quantile_levels = c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99),
   
   # Output settings
-  output_dir   = "C:/Users/syed0/INF599/Final_project/forecasts_SIRS",
-  model_name   = "SIRS-EnKF",
+  output_dir   = "model-output/syed-SIRSEnKF",
+  model_name   = "syed-SIRSEnKF",
   overwrite    = TRUE
 )
 
