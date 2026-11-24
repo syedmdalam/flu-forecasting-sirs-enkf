@@ -1,0 +1,17 @@
+team_name: "syed"
+team_abbr: "syed"
+model_name: "SARIMA"
+model_abbr: "SARIMA"
+designated_model: true
+model_contributors: [
+  {
+    "name": "Syed Md Shamsul Alam",
+    "affiliation": "Northern Arizona University"
+  }
+]
+license: "CC-BY-4.0"
+data_inputs: "ILI%"
+methods: "Forecasts from a fixed-order SARIMA(0,1,1)(0,1,1)[52] model fit independently per location on log-transformed ILI%, with quantile intervals derived from the Gaussian predictive distribution."
+methods_long: "For each forecast origin date and location, a Seasonal ARIMA model with non-seasonal orders (p,d,q)=(0,1,1) and seasonal orders (P,D,Q)=(0,1,1) at period 52 weeks is fit on the log of historical ILI% using the Arima() function from the forecast R package. All available historical data prior to the origin date is used for fitting, with a minimum of 60 observations required. The forecast() function generates 1- to 4-week ahead point forecasts and predictive standard errors on the log scale; the 23 required quantile levels are then computed from the Gaussian predictive distribution and exponentiated back to the percent scale."
+ensemble_of_models: false
+ensemble_of_hub_models: false

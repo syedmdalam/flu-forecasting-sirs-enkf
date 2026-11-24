@@ -1,0 +1,17 @@
+team_name: "syed"
+team_abbr: "syed"
+model_name: "SIRSEnKF"
+model_abbr: "SIRSEnKF"
+designated_model: true
+model_contributors: [
+  {
+    "name": "Syed Md Shamsul Alam",
+    "affiliation": "Northern Arizona University"
+  }
+]
+license: "CC-BY-4.0"
+data_inputs: "ILI%"
+methods: "A stochastic SIRS compartmental model with seasonally-forced transmission rate and Ensemble Kalman Filter joint state-parameter estimation, fit independently per location."
+methods_long: "For each location, an SIRS compartmental model (recovery rate gamma=1/7 per day, immunity waning rate omega=1/180 per day) is propagated forward via stochastic tau-leap simulation in daily steps. The transmission rate beta evolves on a log scale as an Ornstein-Uhlenbeck process with a seasonally-varying mean (winter-peaked, day-of-year forcing), allowing beta to track the seasonality of influenza transmission. An ensemble of 300 particles representing the joint state [S, I, R, beta] is updated weekly using a perturbed-observation Ensemble Kalman Filter against ILI% observations mapped to the I compartment, with observation noise scaled to the effective population. From each origin date, the posterior ensemble is propagated 4 weeks forward without observational updates; the 23 required quantile levels are computed empirically from the projected ensemble at each horizon and converted back to ILI percent scale."
+ensemble_of_models: false
+ensemble_of_hub_models: false
