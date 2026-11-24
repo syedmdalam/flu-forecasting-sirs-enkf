@@ -10,7 +10,7 @@ Probabilistic 1–4 week ahead forecasts of weekly influenza-like illness (ILI %
 
 **SIRS + EnKF (mechanistic).** A stochastic SIRS compartmental model (recovery γ = 1/7 day⁻¹, waning immunity ω = 1/180 day⁻¹) simulated with daily tau-leaping. The transmission rate β is a latent state that follows a log-scale Ornstein–Uhlenbeck process with a winter-peaked seasonal mean. A 300-member **Ensemble Kalman Filter** jointly estimates the state and parameter vector `[S, I, R, β]` from weekly ILI observations, then the posterior ensemble is propagated 4 weeks ahead to produce empirical quantiles. Implemented from scratch: [`sirs_tau_leap.R`](R/sirs_tau_leap.R), [`forecast_step.R`](R/forecast_step.R), [`enkf_update.R`](R/enkf_update.R), [`run_forecast.R`](R/run_forecast.R).
 
-**SARIMA (statistical).** The airline model SARIMA(0,1,1)(0,1,1)[52] on log(ILI %), fit per location on all data before each origin date, with quantiles from the Gaussian predictive distribution.
+**SARIMA (statistical).** The airline model SARIMA(0,1,1)(0,1,1)[52] on log(ILI %), fit per location on all data before each origin date, with quantiles from the Gaussian predictive distribution: [`run_sarima.R`](R/run_sarima.R).
 
 ## Results
 
@@ -51,6 +51,7 @@ R/                      forecasting + evaluation code
   forecast_step.R         one-week ensemble propagation with seasonal OU on log(beta)
   enkf_update.R           perturbed-observation EnKF update on [S, I, R, beta]
   run_forecast.R          driver: filter + 4-week forecast for all 134 origin dates
+  run_sarima.R            SARIMA(0,1,1)(0,1,1)[52] baseline for the same 134 origin dates
   evaluate_forecasts.R    WIS (with decomposition), RMSE, MAE, coverage, plots
   smoke_test.R            2-date quick check of the pipeline
 model-metadata/         hub metadata for each model
@@ -62,11 +63,12 @@ archive/sihr-enkf/      earlier SIHR (hospitalization compartment) variant, kept
 
 ## Reproducing
 
-Requires R ≥ 4.1 with `dplyr`, `readr`, `tidyr`, `lubridate`, `ggplot2`. Data is read directly from the [ATSF2026 hub](https://github.com/sjfox/ATSF2026). Run from the repository root:
+Requires R ≥ 4.1 with `dplyr`, `readr`, `tidyr`, `lubridate`, `ggplot2`, `forecast`. Data is read directly from the [ATSF2026 hub](https://github.com/sjfox/ATSF2026). Run from the repository root:
 
 ```bash
 Rscript R/smoke_test.R                   # quick check (~20 s)
 Rscript R/run_forecast.R                 # all 134 SIRS+EnKF forecasts -> model-output/syed-SIRSEnKF/
+Rscript R/run_sarima.R                   # all 134 SARIMA forecasts     -> model-output/syed-SARIMA/
 Rscript R/evaluate_forecasts.R SIRSEnKF  # -> results/SIRSEnKF/
 Rscript R/evaluate_forecasts.R SARIMA    # -> results/SARIMA/
 ```
